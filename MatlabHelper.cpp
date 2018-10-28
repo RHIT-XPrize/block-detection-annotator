@@ -452,31 +452,31 @@ HRESULT MatlabHelper::ApplyGrayscaleThreshold(mxArray* pImg)
 	}
 
 	// Convert image to grayscale
-	const char* c_convertToGrayscaleExpr = "grayscale_img = rgb2gray(img);";
+	const char* c_convertToGrayscaleExpr = "[labels, centers] = imsegkmeans(img,5);";
 	hr = MatlabEvalExpr(c_convertToGrayscaleExpr);
 	if (FAILED(hr))
 	{
 		return hr;
 	}
 
-	// Find threshold of background for image
-	const char* c_findThresholdExpr = "threshold = graythresh(grayscale_img);";
-	hr = MatlabEvalExpr(c_findThresholdExpr);
-	if (FAILED(hr))
-	{
-		return hr;
-	}
+	//// Find threshold of background for image
+	//const char* c_findThresholdExpr = "threshold = graythresh(grayscale_img);";
+	//hr = MatlabEvalExpr(c_findThresholdExpr);
+	//if (FAILED(hr))
+	//{
+	//	return hr;
+	//}
 
-	// Compute binary mask to reflect thresholding of grayscale image
-	const char* c_computeBinaryMaskExpr = "binary_mask = uint8(~imbinarize(grayscale_img, threshold));";
-	hr = MatlabEvalExpr(c_computeBinaryMaskExpr);
-	if (FAILED(hr))
-	{
-		return hr;
-	}
+	//// Compute binary mask to reflect thresholding of grayscale image
+	//const char* c_computeBinaryMaskExpr = "binary_mask = uint8(~imbinarize(grayscale_img, threshold));";
+	//hr = MatlabEvalExpr(c_computeBinaryMaskExpr);
+	//if (FAILED(hr))
+	//{
+	//	return hr;
+	//}
 
 	// Apply binary mask to original image
-	const char* c_applyBinaryMaskExpr = "filtered_img = img.*repmat(binary_mask,[1,1,3]);";
+	const char* c_applyBinaryMaskExpr = "filtered_img = labeloverlay(img, labels);";
 	hr = MatlabEvalExpr(c_applyBinaryMaskExpr);
 	if (FAILED(hr))
 	{
