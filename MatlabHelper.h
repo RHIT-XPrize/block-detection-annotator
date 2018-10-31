@@ -10,6 +10,7 @@
 #include "windows.h"
 #include <new>
 #include <NuiApi.h>
+#include <vector>
 
 // MATLAB includes
 #include "matrix.h"
@@ -121,6 +122,14 @@ private:
 	/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
 	/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
 	HRESULT MatlabHelper::ApplyGrayscaleThreshold(mxArray* pImg);
+
+	//// <summary>
+	/// Finds centroids of objects on largest portion of background
+	/// </summary>
+	/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
+	/// <param name="centroids">2D vector array that contains the centroids of each object</param>
+	/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
+	HRESULT MatlabHelper::ComputeCentroids(mxArray* pImg, std::vector<std::vector<double> > centroids);
 
     /// <summary>
     /// Moves RGB data from one mxArray to another

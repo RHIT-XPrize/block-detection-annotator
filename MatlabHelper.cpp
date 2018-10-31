@@ -96,10 +96,11 @@ HRESULT MatlabHelper::ApplyColorFilter(mxArray* pImg)
     }
 
     mxArray* filteredImage = NULL;
+	std::vector<std::vector<double> > finalCentroids;
 
     // Apply an effect based on the active filter
 	if (m_colorFilterID == IDM_COLOR_GRAYSCALE_THRESHOLD) {
-		hr = ApplyGrayscaleThreshold(pImg);
+		hr = ComputeCentroids(pImg, finalCentroids);
 	}
 
     return hr;
@@ -315,6 +316,101 @@ HRESULT MatlabHelper::ApplyGrayscaleThreshold(mxArray* pImg)
 	// Get back filtered image
 	mxArray* pFilteredImage;
 	hr = MatlabGetVariable("filtered_img", &pFilteredImage);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	// Overwrite passed in image with the filtered image
+	hr = MoveRgbMxArrayData(pFilteredImage, pImg);
+	mxDestroyArray(pFilteredImage);
+
+	return hr;
+}
+
+//// <summary>
+/// Finds centroids of objects on largest portion of background
+/// </summary>
+/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
+/// <param name="centroids">2D vector array that contains the centroids of each object</param>
+/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
+HRESULT MatlabHelper::ComputeCentroids(mxArray* pImg, std::vector<std::vector<double>> centroids)
+{
+	HRESULT hr;
+
+	hr = MatlabPutVariable("img", pImg);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	const char* c_removeBackgroundExpr = "grayscale_img = rgb2gray(img); \
+											threshold = graythresh(grayscale_img); \
+											only_background_mask = imbinarize(grayscale_img, threshold); \
+											not_background_mask = ~only_background_mask; \
+											no_background_img = img.*repmat(uint8(not_background_mask), [1, 1, 3]);";
+	hr = MatlabEvalExpr(c_removeBackgroundExpr);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	const char* c_findTableExpr = "only_background_mask = imfill(only_background_mask, 'holes'); \
+									background_regions = regionprops(only_background_mask, grayscale_img, { 'Area', 'Centroid', 'PixelIdxList' }); \
+									[max_area, max_id] = max([background_regions.Area]); \
+									max_region_pixels = background_regions(max_id).PixelIdxList;";
+	hr = MatlabEvalExpr(c_findTableExpr);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	const char* c_restrictToTableExpr = "table_mask = zeros(size(only_background_mask)); \
+											table_mask(max_region_pixels) = 1; \
+											table_mask = imerode(table_mask, strel('cube', 10)); \
+											only_table_img = no_background_img.*repmat(uint8(table_mask), [1, 1, 3]); \
+											no_table_background_mask = table_mask & not_background_mask;";
+	hr = MatlabEvalExpr(c_restrictToTableExpr);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	const char* c_findCentroidsExpr = "objects = regionprops(no_table_background_mask,grayscale_img,{'Area', 'Centroid'}); \
+										allCentroids = arrayfun(@(n) n > 60, [objects.Area]); \
+										validCentroidIdx = find(allCentroids == 1); \
+										numValidCentroids = length(validCentroidIdx); \
+										unformattedCentroids = [objects(validCentroidIdx).Centroid]; \
+										finalCentroids = transpose(reshape(unformattedCentroids, [2, numValidCentroids]));";
+	hr = MatlabEvalExpr(c_findCentroidsExpr);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	const char* c_addCentroidsExpr = "filteredImg = img; \
+											for i=1:numValidCentroids \
+												currX = finalCentroids(i, 1); \
+												currY = finalCentroids(i, 2); \
+												filteredImg = insertShape(filteredImg, 'circle', [currX currY 20], 'LineWidth', 10, 'Color', 'green'); \
+											end";
+	hr = MatlabEvalExpr(c_addCentroidsExpr);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	// Get back filtered image
+	mxArray* pFilteredImage;
+	hr = MatlabGetVariable("filteredImg", &pFilteredImage);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	// Get back filtered image
+	mxArray* pCentroids;
+	hr = MatlabGetVariable("finalCentroids", &pCentroids);
 	if (FAILED(hr))
 	{
 		return hr;
