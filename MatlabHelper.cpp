@@ -53,19 +53,6 @@ HRESULT MatlabHelper::InitMatlabEngine(bool engineUIVisible /* = false */)
         return E_NOT_VALID_STATE;
     }
 
-    // Set up morphological structuring element used for some filters inside MATLAB engine
-    HRESULT hStructuralElement = CreateStructuralElement();
-
-    // Set up Gaussian filters for depth and color streams
-    HRESULT hColor = CreateGaussianFilter(ColorStream, COLOR_GAUSS_KERNEL_SIZE, COLOR_GAUSS_KERNEL_SIZE);
-    HRESULT hDepth = CreateGaussianFilter(DepthStream, DEPTH_GAUSS_KERNEL_SIZE, DEPTH_GAUSS_KERNEL_SIZE);
-
-
-    if (FAILED(hStructuralElement) || FAILED(hColor) || FAILED(hDepth))
-    {
-        return E_NOT_VALID_STATE;
-    }
-
     return S_OK;
 }
 
@@ -111,82 +98,13 @@ HRESULT MatlabHelper::ApplyColorFilter(mxArray* pImg)
     mxArray* filteredImage = NULL;
 
     // Apply an effect based on the active filter
-    switch(m_colorFilterID)
-    {
-    case IDM_COLOR_FILTER_GAUSSIANBLUR:
-        {
-            hr = ApplyGaussianBlur(pImg, ColorStream);
-        }
-        break;
-    case IDM_COLOR_FILTER_DILATE:
-        {
-            hr = ApplyDilate(pImg);
-        }
-        break;
-    case IDM_COLOR_FILTER_ERODE:
-        {
-            hr = ApplyErode(pImg);
-        }
-        break;
-    case IDM_COLOR_FILTER_THRESHOLD:
-        {
-			hr = ApplyGrayscaleThreshold(pImg);
-		}
-		break;
-    }
+	if (m_colorFilterID == IDM_COLOR_GRAYSCALE_THRESHOLD) {
+		hr = ApplyGrayscaleThreshold(pImg);
+	}
 
     return hr;
 }
 
-/// <summary>
-/// Applies the depth image filter to the given image
-/// </summary>
-/// <param name="pImg">pointer to mxArray holding image to filter</param>
-/// <returns>S_OK if successful, an error code otherwise</returns>
-HRESULT MatlabHelper::ApplyDepthFilter(mxArray* pImg)
-{
-    // Check to see if we have a valid engine pointer
-    if (!m_matlabEngine) 
-    {
-        return HRESULT_FROM_WIN32(ERROR_INVALID_STATE);
-    }
-
-    // Validate RGB matrix
-    HRESULT hr = ValidateMxArrayRgbImage(pImg);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    mxArray* filteredImage = NULL;
-
-    // Apply an effect based on the active filter
-    switch(m_depthFilterID)
-    {
-    case IDM_DEPTH_FILTER_GAUSSIANBLUR:
-        {
-            hr = ApplyGaussianBlur(pImg, ColorStream);
-        }
-        break;
-    case IDM_DEPTH_FILTER_DILATE:
-        {
-            hr = ApplyDilate(pImg);
-        }
-        break;
-    case IDM_DEPTH_FILTER_ERODE:
-        {
-            hr = ApplyErode(pImg);
-        }
-        break;
-    case IDM_DEPTH_FILTER_CANNYEDGE:
-        {
-            hr = ApplyCannyEdge(pImg);
-        }
-        break;
-    }
-
-    return hr;
-}
 
 /// <summary>
 /// Converts an RGB MATLAB mxArray into a Windows GDI bitmap
@@ -347,95 +265,6 @@ HRESULT MatlabHelper::MatlabEvalExpr(const char* expr)
     return ConvertMatlabRetCodeToHResult(retCode);
 }
 
-/// <summary>
-/// Applies Gaussian blur to an image
-/// </summary>
-/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-/// <param name="type">type of image</param>
-/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-HRESULT MatlabHelper::ApplyGaussianBlur(mxArray* pImg, StreamType type)
-{
-    HRESULT hr;
-
-    hr = MatlabPutVariable("img", pImg);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    const char* c_applyColorGaussianFilterExpr = "filtered_img = imfilter(img, color_gauss_filter, 'replicate');";
-    const char* c_applyDepthGaussianFilterExpr = "filtered_img = imfilter(img, depth_gauss_filter, 'replicate');";
-
-    // Pick appropriate Gaussian filter based on image stream
-    if (type == ColorStream)
-    {
-        // Apply the Gaussian blur filter
-        hr = MatlabEvalExpr(c_applyColorGaussianFilterExpr);
-    } 
-    else if (type == DepthStream)
-    {
-        // Apply the Gaussian blur filter
-        hr = MatlabEvalExpr(c_applyDepthGaussianFilterExpr);
-    }
-
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Get back filtered image
-    mxArray* pFilteredImage;
-    hr = MatlabGetVariable("filtered_img", &pFilteredImage);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Overwrite passed in image with the filtered image
-    hr = MoveRgbMxArrayData(pFilteredImage, pImg);
-    mxDestroyArray(pFilteredImage);
-
-    return hr;
-}
-
-//// <summary>
-/// Applies dilate to an image
-/// </summary>
-/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-HRESULT MatlabHelper::ApplyDilate(mxArray* pImg)
-{
-    HRESULT hr;
-
-    hr = MatlabPutVariable("img", pImg);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Dilate the image
-    const char* c_dilateElementExpr = "filtered_img = imdilate(img, se);";
-    hr = MatlabEvalExpr(c_dilateElementExpr);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Get back filtered image
-    mxArray* pFilteredImage;
-    hr = MatlabGetVariable("filtered_img", &pFilteredImage);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Overwrite passed in image with the filtered image
-    hr = MoveRgbMxArrayData(pFilteredImage, pImg);
-    mxDestroyArray(pFilteredImage);
-
-    return hr;
-}
-
 //// <summary>
 /// Performs greyscale threshold
 /// </summary>
@@ -499,93 +328,6 @@ HRESULT MatlabHelper::ApplyGrayscaleThreshold(mxArray* pImg)
 }
 
 /// <summary>
-/// Applies erode to an image
-/// </summary>
-/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-HRESULT MatlabHelper::ApplyErode(mxArray* pImg)
-{
-    HRESULT hr;
-
-    hr = MatlabPutVariable("img", pImg);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Erode the image
-    const char* c_erodeElementExpr = "filtered_img = imerode(img, se);";
-    hr = MatlabEvalExpr(c_erodeElementExpr);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Get back filtered image
-    mxArray* pFilteredImage;
-    hr = MatlabGetVariable("filtered_img", &pFilteredImage);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Overwrite passed in image with the filtered image
-    hr = MoveRgbMxArrayData(pFilteredImage, pImg);
-    mxDestroyArray(pFilteredImage);
-
-    return hr;
-}
-
-/// <summary>
-/// Applies canny edge detection to an image
-/// </summary>
-/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-HRESULT MatlabHelper::ApplyCannyEdge(mxArray* pImg)
-{
-    HRESULT hr;
-
-    hr = MatlabPutVariable("img", pImg);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Apply canny edge detection
-    const char* c_cannyEdgeExpr = "binary_img = edge(rgb2gray(img), 'canny');";
-    hr = MatlabEvalExpr(c_cannyEdgeExpr);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Convert filtered image from binary into RGB
-    const char* c_binaryToRGBExpr = 
-        "[indexed_img map] = gray2ind(binary_img);"
-        "filtered_img = uint8(255 * ind2rgb(indexed_img, map));"
-        ;
-    hr = MatlabEvalExpr(c_binaryToRGBExpr);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Get back filtered image
-    mxArray* pFilteredImage;
-    hr = MatlabGetVariable("filtered_img", &pFilteredImage);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    // Overwrite passed in image with the filtered image
-    hr = MoveRgbMxArrayData(pFilteredImage, pImg);
-    mxDestroyArray(pFilteredImage);
-
-    return hr;
-}
-
-/// <summary>
 /// Moves RGB data from one mxArray to another
 /// </summary>
 /// <param name="pSourceImg">pointer to the source image</param>
@@ -615,55 +357,4 @@ HRESULT MatlabHelper::MoveRgbMxArrayData(mxArray* pSourceImg, mxArray* pDestImg)
     mxSetData(pSourceImg, NULL);
 
     return S_OK;
-}
-
-/// <summary>
-/// Creates a morphological structuring element inside the Matlab workspace used for erode and dilate
-/// </summary>
-/// <returns>S_OK if success, an error code otherwise</returns>
-HRESULT MatlabHelper::CreateStructuralElement()
-{
-    // Create a morphological structuring element that will be used to erode/dilate the image.
-    const char* c_structuringElementExpr = "se = strel('disk', 2);";
-    return MatlabEvalExpr(c_structuringElementExpr);
-}
-
-/// <summary>
-/// Creates a Gaussian blur filter inside the Matlab workspace
-/// </summary>
-/// <param name="type">type of image stream</param>
-/// <param name="kernelWidth">width of kernel for blur</param>
-/// <param name="kernelHeight">height of kernel for blur</param>
-/// <returns>S_OK if success, an error code otherwise</returns>
-HRESULT MatlabHelper::CreateGaussianFilter(StreamType type, int kernelWidth, int kernelHeight)
-{
-    HRESULT hr;
-
-    // Define kernel size and push it to workspace
-    mwSize dimensions[] = {1, 2};
-    mxArray* kernelSize = mxCreateNumericArray(static_cast<mwSize>(2), dimensions, mxDOUBLE_CLASS, mxREAL);
-    DOUBLE* data = reinterpret_cast<DOUBLE*>(mxGetData(kernelSize));
-    data[0] = kernelWidth;
-    data[1] = kernelHeight;
-    hr = MatlabPutVariable("kernel_size", kernelSize);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    const char* c_createColorGaussianFilterExpr = "color_gauss_filter = fspecial('gaussian', kernel_size, 0.3 * (kernel_size(1) / 2 - 1) + 0.8);";
-    const char* c_createDepthGaussianFilterExpr = "depth_gauss_filter = fspecial('gaussian', kernel_size, 0.3 * (kernel_size(1) / 2 - 1) + 0.8);";
-
-    // Create the actual filter
-    if (type == ColorStream)
-    {
-        hr = MatlabEvalExpr(c_createColorGaussianFilterExpr);
-    }
-    else if (type == DepthStream)
-    {
-        hr = MatlabEvalExpr(c_createDepthGaussianFilterExpr);
-    }
-
-
-    return hr;
 }
