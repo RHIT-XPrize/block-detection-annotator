@@ -32,7 +32,7 @@ class CMainWindow
 
     // First and last menu item identifiers for filter radio buttons
     static const int COLOR_FILTER_FIRST = IDM_COLOR_FILTER_NOFILTER;
-    static const int COLOR_FILTER_LAST = IDM_COLOR_GRAYSCALE_THRESHOLD;
+    static const int COLOR_FILTER_LAST = IDM_COLOR_FIND_CENTROIDS;
 
     static const int DEPTH_FILTER_FIRST = IDM_DEPTH_FILTER_NOFILTER;
 	static const int DEPTH_FILTER_LAST = IDM_DEPTH_FILTER_NOFILTER;

@@ -284,6 +284,7 @@ LRESULT CALLBACK CMainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
             case IDM_COLOR_FILTER_NOFILTER:
             case IDM_COLOR_GRAYSCALE_THRESHOLD:
+			case IDM_COLOR_FIND_CENTROIDS:
                 {
                     m_colorFilterID = wmID;
                     m_matlabHelper.SetColorFilter(wmID);
@@ -1084,6 +1085,10 @@ wstring CMainWindow::FilterIDToString(int filterID)
 
     case IDM_COLOR_GRAYSCALE_THRESHOLD:
 		text += _TEXT("Grayscale Threshold");
+		break;
+
+	case IDM_COLOR_FIND_CENTROIDS:
+		text += _TEXT("Find foreground centroids");
 		break;
 
     default:
