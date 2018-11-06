@@ -283,10 +283,8 @@ LRESULT CALLBACK CMainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
                 break;
 
             case IDM_COLOR_FILTER_NOFILTER:
-            case IDM_COLOR_FILTER_GAUSSIANBLUR:
-            case IDM_COLOR_FILTER_DILATE:
-            case IDM_COLOR_FILTER_ERODE:
-            case IDM_COLOR_FILTER_THRESHOLD:
+            case IDM_COLOR_GRAYSCALE_THRESHOLD:
+			case IDM_COLOR_FIND_CENTROIDS:
                 {
                     m_colorFilterID = wmID;
                     m_matlabHelper.SetColorFilter(wmID);
@@ -338,10 +336,6 @@ LRESULT CALLBACK CMainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
                 break;
 
             case IDM_DEPTH_FILTER_NOFILTER:
-            case IDM_DEPTH_FILTER_GAUSSIANBLUR:
-            case IDM_DEPTH_FILTER_DILATE:
-            case IDM_DEPTH_FILTER_ERODE:
-            case IDM_DEPTH_FILTER_CANNYEDGE:
                 {
                     m_depthFilterID = wmID;
                     CheckMenuRadioItem(hMenu, DEPTH_FILTER_FIRST, DEPTH_FILTER_LAST, wmID, MF_BYCOMMAND);
@@ -554,13 +548,6 @@ DWORD WINAPI CMainWindow::ProcessThread()
             if (!m_bIsDepthPaused && SUCCEEDED(m_frameHelper.UpdateDepthFrame())) 
             {
                 HRESULT hr = m_frameHelper.GetDepthImageAsArgb(m_pDepthMat);
-                if (FAILED(hr))
-                {
-                    continue;
-                }
-
-                // Apply filter using MATLAB
-                hr = m_matlabHelper.ApplyDepthFilter(m_pDepthMat);
                 if (FAILED(hr))
                 {
                     continue;
@@ -1096,28 +1083,13 @@ wstring CMainWindow::FilterIDToString(int filterID)
         text += _TEXT("None");
         break;
 
-    case IDM_COLOR_FILTER_GAUSSIANBLUR:
-    case IDM_DEPTH_FILTER_GAUSSIANBLUR:
-        text += _TEXT("Gaussian Blur");
-        break;
-
-    case IDM_COLOR_FILTER_DILATE:
-    case IDM_DEPTH_FILTER_DILATE:
-        text += _TEXT("Dilate");
-        break;
-
-    case IDM_COLOR_FILTER_ERODE:
-    case IDM_DEPTH_FILTER_ERODE:
-        text += _TEXT("Erode");
-        break;
-
-    case IDM_COLOR_FILTER_THRESHOLD:
-		text += _TEXT("Color Threshold");
+    case IDM_COLOR_GRAYSCALE_THRESHOLD:
+		text += _TEXT("Grayscale Threshold");
 		break;
 
-    case IDM_DEPTH_FILTER_CANNYEDGE:
-        text += _TEXT("Canny Edge");
-        break;
+	case IDM_COLOR_FIND_CENTROIDS:
+		text += _TEXT("Find foreground centroids");
+		break;
 
     default:
         text += _TEXT("Unknown");

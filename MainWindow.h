@@ -32,10 +32,10 @@ class CMainWindow
 
     // First and last menu item identifiers for filter radio buttons
     static const int COLOR_FILTER_FIRST = IDM_COLOR_FILTER_NOFILTER;
-    static const int COLOR_FILTER_LAST = IDM_COLOR_FILTER_THRESHOLD;
+    static const int COLOR_FILTER_LAST = IDM_COLOR_FIND_CENTROIDS;
 
     static const int DEPTH_FILTER_FIRST = IDM_DEPTH_FILTER_NOFILTER;
-    static const int DEPTH_FILTER_LAST = IDM_DEPTH_FILTER_CANNYEDGE;
+	static const int DEPTH_FILTER_LAST = IDM_DEPTH_FILTER_NOFILTER;
 
     // Font size in points of the stream information
     static const int STREAM_INFO_TEXT_POINT_SIZE = 10;

@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\AnnotatorProcessing">
+      <UniqueIdentifier>{273c0911-e6ee-48b7-82fc-e5f3b175c4b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GuiTestUnit">
+      <UniqueIdentifier>{a30e4d2d-33a7-4f94-97da-6c86aa53a141}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainWindow.h">
@@ -35,17 +41,17 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MainWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MatlabHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MatlabFrameHelper.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GuiTestUnit</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>Source Files\GuiTestUnit</Filter>
     </ClCompile>
     <ClCompile Include="FrameRateTracker.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GuiTestUnit</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

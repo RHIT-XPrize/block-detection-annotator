@@ -10,6 +10,7 @@
 #include "windows.h"
 #include <new>
 #include <NuiApi.h>
+#include <vector>
 
 // MATLAB includes
 #include "matrix.h"
@@ -66,13 +67,6 @@ public:
     HRESULT ApplyColorFilter(mxArray* pImg);
 
     /// <summary>
-    /// Applies the depth image filter to the given image
-    /// </summary>
-    /// <param name="pImg">pointer to mxArray holding image to filter</param>
-    /// <returns>S_OK if successful, an error code otherwise</returns>
-    HRESULT ApplyDepthFilter(mxArray* pImg);
-
-    /// <summary>
     /// Converts an RGB MATLAB mxArray into a Windows GDI bitmap
     /// </summary>
     /// <param name="pImg">pointer to mxArray holding image to convert</param>
@@ -122,21 +116,6 @@ private:
     /// <returns>S_OK if success, E_FAIL if an error occurred</returns>
     HRESULT ConvertMatlabRetCodeToHResult(int retCode);
 
-    /// <summary>
-    /// Applies Gaussian blur to an image
-    /// </summary>
-    /// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-    /// <param name="type">type of image</param>
-    /// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-    HRESULT ApplyGaussianBlur(mxArray* pImg, StreamType type);
-
-    /// <summary>
-    /// Applies dilate to an image
-    /// </summary>
-    /// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-    /// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-    HRESULT ApplyDilate(mxArray* pImg);
-
 	//// <summary>
 	/// Performs greyscale threshold
 	/// </summary>
@@ -144,19 +123,13 @@ private:
 	/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
 	HRESULT MatlabHelper::ApplyGrayscaleThreshold(mxArray* pImg);
 
-    /// <summary>
-    /// Applies erode to an image
-    /// </summary>
-    /// <param name="pImg">pointer to the image that will have a filter applied to it</param>
-    /// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-    HRESULT ApplyErode(mxArray* pImg);
-
-    /// <summary>
-    /// Applies canny edge detection to an image
-    /// </summary>
-    /// <param name="pImg">pointer to the image that will have a filter applied to it</param>aram>
-    /// <returns>S_OK if success, E_FAIL if an error occurred</returns>
-    HRESULT ApplyCannyEdge(mxArray* pImg);
+	//// <summary>
+	/// Finds centroids of objects on largest portion of background
+	/// </summary>
+	/// <param name="pImg">pointer to the image that will have a filter applied to it</param>
+	/// <param name="centroids">2D vector array that contains the centroids of each object</param>
+	/// <returns>S_OK if success, E_FAIL if an error occurred</returns>
+	HRESULT MatlabHelper::ComputeCentroids(mxArray* pImg, std::vector<std::vector<double> > centroids);
 
     /// <summary>
     /// Moves RGB data from one mxArray to another
@@ -165,21 +138,6 @@ private:
     /// <param name="pDestImg">pointer to the destination image</param>
     /// <returns>S_OK if move is successful, E_FAIL if an error occurred</returns>
     HRESULT MoveRgbMxArrayData(mxArray* pSourceImg, mxArray* pDestImg);
-
-    /// <summary>
-    /// Creates a morphological structuring element inside the MATLAB workspace used for erode and dilate
-    /// </summary>
-    /// <returns>S_OK if success, an error code otherwise</returns>
-    HRESULT CreateStructuralElement();
-
-    /// <summary>
-    /// Creates a Gaussian blur filter inside the MATLAB workspace
-    /// </summary>
-    /// <param name="type">type of image stream</param>
-    /// <param name="kernelWidth">width of kernel for blur</param>
-    /// <param name="kernelHeight">height of kernel for blur</param>
-    /// <returns>S_OK if success, an error code otherwise</returns>
-    HRESULT CreateGaussianFilter(StreamType type, int kernelWidth, int kernelHeight);
 
     // Variables:
     // Resource IDs of the active filters
