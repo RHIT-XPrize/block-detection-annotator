@@ -1,10 +1,10 @@
-* Block Detection Annotator
+# Block Detection Annotator
 
-** Overview
+## Overview
 
 This application serves as the preproessing unit for our central pipeline. Our preprocessing consists of finding the centroids of objects in the collaboration space. To detect blocks, we apply a collection of image recognition techniques to an RGB image obtained from a Kinect sensor. The image processing is done in MATLAB and the results can be optionally viewed through an option in the sample application's GUI.
 
-** Dependencies
+## Dependencies
 - Kinect SDK v1.8
   - Confirmed to work with Windows 7+
 - MATLAB
@@ -12,7 +12,7 @@ This application serves as the preproessing unit for our central pipeline. Our p
 - Visual Studio
   - Confirmed to work with VS 2017
 
-** Installation
+## Installation
 This repository is a VS project, so opening the solution file (`.sln`) with Visual Studio 2017 should automatically import the project. However, the project won't compile until references are made to the above dependencies. In particular, the following edits need to be made to the project's configuration.
 
 To find these properties, right-click the project and select "Properties". From there, modify the following properties under the "VC++ Directories" heading.
